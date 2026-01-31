@@ -25,6 +25,17 @@ class RotorChain:
         """
         self.params = params
 
+    def get_acceleration(self, theta: np.ndarray) -> np.ndarray:
+        """
+        Calculate the acceleration (d_omega/dt) for given angles.
+        """
+        theta_plus = np.roll(theta, -1)
+        theta_minus = np.roll(theta, 1)
+        
+        accel = (-self.params.j_coupling * (np.sin(theta - theta_plus) + np.sin(theta - theta_minus)) 
+                 - self.params.m_field * np.sin(theta))
+        return accel
+
     def equations_of_motion(self, t: float, y: np.ndarray) -> np.ndarray:
         """
         Calculate the time derivatives of the state vector.
@@ -47,12 +58,8 @@ class RotorChain:
         theta = y[:n]
         omega = y[n:]
         
-        theta_plus = np.roll(theta, -1)
-        theta_minus = np.roll(theta, 1)
-        
         d_theta = omega
-        d_omega = (-self.params.j_coupling * (np.sin(theta - theta_plus) + np.sin(theta - theta_minus)) 
-                   - self.params.m_field * np.sin(theta))
+        d_omega = self.get_acceleration(theta)
         
         return np.concatenate([d_theta, d_omega])
 
@@ -84,7 +91,7 @@ class RotorChain:
 
     def simulate(self, y0: np.ndarray, t_span: Tuple[float, float], t_eval: np.ndarray = None) -> np.ndarray:
         """
-        Run the simulation.
+        Run the simulation using solve_ivp (RK45).
         
         Args:
             y0: Initial state vector.
@@ -115,6 +122,8 @@ class SimulationEngine:
         self.chain = RotorChain(params)
         self.y = np.zeros(2 * params.n_rotors)
         self.t = 0.0
+        # Sub-stepping parameters
+        self.substeps = 10
         
     def set_state(self, y: np.ndarray, t: float = 0.0):
         """Set the current state of the simulation."""
@@ -129,14 +138,54 @@ class SimulationEngine:
         self.params = SimulationParams(n_rotors=n, j_coupling=j, m_field=m)
         self.chain.params = self.params
 
+    def verlet_step(self, dt: float):
+        """
+        Perform a single Velocity Verlet step.
+        """
+        n = self.params.n_rotors
+        theta = self.y[:n]
+        omega = self.y[n:]
+        
+        # 1. v(t + dt/2) = v(t) + a(t) * dt/2
+        accel_t = self.chain.get_acceleration(theta)
+        omega_mid = omega + accel_t * (dt / 2.0)
+        
+        # 2. x(t + dt) = x(t) + v(t + dt/2) * dt
+        theta_new = theta + omega_mid * dt
+        
+        # 3. v(t + dt) = v(t + dt/2) + a(t + dt) * dt/2
+        accel_new = self.chain.get_acceleration(theta_new)
+        omega_new = omega_mid + accel_new * (dt / 2.0)
+        
+        self.y[:n] = theta_new
+        self.y[n:] = omega_new
+        self.t += dt
+
     def step(self, dt: float) -> bool:
-        """Advance the simulation by dt. Returns True if successful."""
-        t_span = (self.t, self.t + dt)
-        sol = self.chain.simulate(self.y, t_span)
-        if sol.success:
-            self.y = sol.y[:, -1]
-            self.t += dt
-        return sol.success
+        """Advance the simulation by dt using sub-stepping with Verlet."""
+        sub_dt = dt / self.substeps
+        for _ in range(self.substeps):
+            self.verlet_step(sub_dt)
+        return True
+
+    @property
+    def theta(self) -> np.ndarray:
+        return self.y[:self.params.n_rotors]
+
+    @property
+    def omega(self) -> np.ndarray:
+        return self.y[self.params.n_rotors:]
+    
+    def get_energy(self) -> float:
+        """Calculate total energy of the current state."""
+        return self.chain.hamiltonian(self.y)
+    
+    def get_order_parameter(self) -> float:
+        """Calculate the phase order parameter r."""
+        theta = self.theta
+        r = np.sqrt(np.mean(np.cos(theta))**2 + np.mean(np.sin(theta))**2)
+        return r
+
 
     @property
     def theta(self) -> np.ndarray:
