@@ -20,15 +20,25 @@ The equations of motion are derived as:
 
 ## Implementation
 
-- **Core**: Python 3.13 with NumPy for numerical operations and SciPy (`solve_ivp` with RK45) for high-quality integration.
+- **Core**: Python 3.13 with NumPy for numerical operations and a custom **Velocity Verlet** symplectic integrator for energy-conserving dynamics.
+    - Uses sub-stepping (default 10x) per UI frame to maintain stability at high coupling strengths.
 - **Visualization**: Pyqtgraph-based display representing rotors as compass needles on a circular chain.
     - Features a real-time mean direction (order parameter) indicator with magnitude scaling.
-    - Includes visual aids like reference circles for alignment levels.
+    - Includes a kinetic energy heatmap for real-time energy distribution monitoring.
 - **UI**: PyQt6 interface providing:
     - Interactive sliders for $J$ and $M$.
-    - Selection of initial condition presets (Random, Twisted, Domain Wall, Single Kick).
-    - Dynamic control of the number of rotors $N$.
+    - Selection of initial condition presets:
+        - **Random Angles**: High entropy start.
+        - **Twisted**: Topological winding state (adjustable winding $k$).
+        - **Domain Wall**: Relaxation from a split configuration.
+        - **Single Kick**: Perturbation of a single rotor (adjustable index).
+        - **Thermalized**: Random initial velocities (Maxwell-Boltzmann like).
+    - Dynamic control of the number of rotors $N$ (optimized for seamless updates).
     - Real-time monitoring of energy per rotor and the order parameter history (10s window).
+- **Testing**:
+    - Unit tests for physics logic and energy conservation.
+    - UI automation tests using `pytest-qt`.
+    - Performance stress tests for large $N$.
 - **Dependency Management**: Handled by `uv`.
 - **Project Tracking**: Managed via `beads`.
 
