@@ -61,17 +61,18 @@ class ControlPanel(QtWidgets.QWidget):
         self.preset_combo.addItem("Random Angles")
         self.preset_combo.addItem("Twisted")
         self.preset_combo.addItem("Domain Wall")
-        self.preset_combo.addItem("Single Kick (Prototype)")
+        self.preset_combo.addItem("Single Kick")
+        self.preset_combo.addItem("Thermalized")
         self.layout.addWidget(self.preset_label)
         self.layout.addWidget(self.preset_combo)
         
-        # Winding number for twisted state
+        # Winding number / Index for presets
         self.k_widget = QtWidgets.QWidget()
         self.k_layout = QtWidgets.QHBoxLayout(self.k_widget)
         self.k_layout.setContentsMargins(0, 0, 0, 0)
         self.k_label = QtWidgets.QLabel("Winding (k):")
         self.k_spin = QtWidgets.QSpinBox()
-        self.k_spin.setRange(-25, 25)
+        self.k_spin.setRange(-250, 250)
         self.k_spin.setValue(1)
         self.k_layout.addWidget(self.k_label)
         self.k_layout.addWidget(self.k_spin)
@@ -168,8 +169,15 @@ class ControlPanel(QtWidgets.QWidget):
         self.m_callback: Callable[[float], None] = lambda x: None
 
     def _handle_preset_ui_change(self, index: int):
-        # index 1 is "Twisted"
-        self.k_widget.setVisible(index == 1)
+        # 1: "Twisted", 3: "Single Kick"
+        if index == 1:
+            self.k_label.setText("Winding (k):")
+            self.k_widget.setVisible(True)
+        elif index == 3:
+            self.k_label.setText("Rotor Index:")
+            self.k_widget.setVisible(True)
+        else:
+            self.k_widget.setVisible(False)
 
     def _on_j_changed(self, value: int):
         j = value / 100.0

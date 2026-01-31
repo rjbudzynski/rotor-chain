@@ -44,12 +44,21 @@ def test_m_slider_updates_engine(app, qtbot):
 
 def test_preset_change_updates_state(app, qtbot):
     """Verify that changing the preset re-initializes the simulation."""
-    # Default is Random Angles. Change to Twisted.
-    # index 1 is Twisted
+    # Twisted
     with qtbot.waitSignal(app.controls.preset_combo.currentIndexChanged):
         app.controls.preset_combo.setCurrentIndex(1)
-    
-    # After change, reset_simulation is called, and y0 is updated.
-    # For Twisted with k=1, N=10, y should be [0, 2pi/10, 4pi/10, ...]
     expected_theta = (2 * np.pi * 1 * np.arange(10)) / 10
     assert np.allclose(app.engine.theta, expected_theta)
+
+    # Single Kick
+    app.controls.k_spin.setValue(5)
+    with qtbot.waitSignal(app.controls.preset_combo.currentIndexChanged):
+        app.controls.preset_combo.setCurrentIndex(3)
+    assert np.isclose(app.engine.theta[5], np.pi - 0.01)
+    assert np.allclose(app.engine.theta[[0,1,2,3,4,6,7,8,9]], 0)
+
+    # Thermalized
+    with qtbot.waitSignal(app.controls.preset_combo.currentIndexChanged):
+        app.controls.preset_combo.setCurrentIndex(4)
+    assert not np.allclose(app.engine.omega, 0)
+    assert np.allclose(app.engine.theta, 0)

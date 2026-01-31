@@ -16,9 +16,10 @@ The system consists of $N$ rotors arranged in a circle. Each rotor interacts wit
 - **Number of Rotors (N)**: Adjust the total number of rotors. (Changeable only when paused).
 - **Initial Condition Preset**: Choose a starting configuration:
     - **Random Angles**: High entropy start.
-    - **Twisted**: Creates a topological winding state.
+    - **Twisted**: Creates a topological winding state. Use **Winding (k)** to set the number of full rotations.
     - **Domain Wall**: Split configuration to observe relaxation.
-    - **Single Kick**: Traditional perturbation start.
+    - **Single Kick**: One rotor is perturbed. Use **Rotor Index** to select which one.
+    - **Thermalized**: Random velocities (Maxwell-Boltzmann like) assigned to rotors at zero angle.
 - **Coupling (J)**: Real-time slider for neighbor interaction strength.
 - **Field (M)**: Real-time slider for external field strength.
 

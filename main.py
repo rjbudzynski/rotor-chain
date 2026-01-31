@@ -85,8 +85,13 @@ class MainWindow(QtWidgets.QMainWindow):
             y0[half:n] = np.pi
             # Tiny velocity perturbation to break unstable equilibrium
             y0[n] = 1e-6
-        elif preset == "Single Kick (Prototype)":
-            y0[0] = np.pi - 0.01
+        elif preset == "Single Kick":
+            idx = self.controls.k_spin.value() % n
+            y0[idx] = np.pi - 0.01
+        elif preset == "Thermalized":
+            # Random velocities (Maxwell-Boltzmann like)
+            # sigma = 1.0 for now as a default 'temperature'
+            y0[n:] = np.random.normal(0, 1.0, n)
             
         return y0
 
