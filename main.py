@@ -185,10 +185,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.controls.update_order_plot(times, values)
 
 def main():
+    QtCore.QCoreApplication.setApplicationName("RotorChainSimulation")
+    QtCore.QCoreApplication.setOrganizationName("RotorChainProject")
+    QtCore.QCoreApplication.setApplicationVersion("1.0.0")
+    
     app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName("RotorChainSimulation")
     app.setApplicationDisplayName("Rotor Chain Simulation")
-    app.setOrganizationName("RotorChainProject")
     
     # Set application icon
     icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
