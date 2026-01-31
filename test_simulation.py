@@ -56,8 +56,9 @@ def test_external_field():
     y = np.array([0.1, 0.2, 0.0, 0.0])
     dy = chain.equations_of_motion(0, y)
     
-    # With J=0, d_omega should be exactly M
-    assert np.allclose(dy[2:], m_val)
+    # With J=0, d_omega should be -M * sin(theta)
+    expected = -m_val * np.sin(y[:2])
+    assert np.allclose(dy[2:], expected)
 
 def test_initial_conditions_prototype():
     """Check the specific initial conditions mentioned in the prompt."""
