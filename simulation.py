@@ -13,7 +13,7 @@ class RotorChain:
     Represents a chain of coupled planar rotors.
     
     The Hamiltonian is given by:
-    H = 1/2 * sum(omega_i^2) - J * sum(1 - cos(theta_i - theta_{i+1})) - M * sum(theta_i)
+    H = 1/2 * sum(omega_i^2) + J * sum(1 - cos(theta_i - theta_{i+1})) - M * sum(cos(theta_i))
     """
 
     def __init__(self, params: SimulationParams):

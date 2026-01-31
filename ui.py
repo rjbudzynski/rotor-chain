@@ -1,4 +1,5 @@
 import pyqtgraph as pg
+import numpy as np
 from PyQt6 import QtWidgets, QtCore, QtGui
 from typing import Callable
 
@@ -141,6 +142,25 @@ class ControlPanel(QtWidgets.QWidget):
         self.order_curve = self.order_plot.plot(pen=pg.mkPen('y', width=1.5))
         self.layout.addWidget(self.order_plot)
         
+        # Kinetic energy heatmap
+        self.heatmap_label = QtWidgets.QLabel("Kinetic Energy Heatmap:")
+        self.layout.addWidget(self.heatmap_label)
+        
+        self.heatmap_plot = pg.PlotWidget()
+        self.heatmap_plot.setFixedHeight(75)
+        self.heatmap_plot.setMenuEnabled(False)
+        self.heatmap_plot.showAxis('left', False)
+        self.heatmap_plot.showAxis('bottom', False)
+        self.heatmap_plot.setMouseEnabled(x=False, y=False)
+        
+        self.heatmap_image = pg.ImageItem()
+        # Use 'inferno' colormap for heat
+        colormap = pg.colormap.get('inferno')
+        self.heatmap_image.setLookupTable(colormap.getLookupTable())
+        self.heatmap_plot.addItem(self.heatmap_image)
+        
+        self.layout.addWidget(self.heatmap_plot)
+        
         self.layout.addStretch()
         
         # Callbacks for external connection
@@ -172,6 +192,16 @@ class ControlPanel(QtWidgets.QWidget):
                 self.order_plot.setXRange(0, 10, padding=0)
         else:
             self.order_plot.setXRange(0, 10, padding=0)
+
+    def update_energy_heatmap(self, omega_sq: np.ndarray):
+        """Update the kinetic energy heatmap."""
+        # Reshape to Nx1 for a horizontal strip (width=N, height=1)
+        # In pyqtgraph's default 'col-major' axisOrder, image data is (width, height)
+        data = omega_sq.reshape(-1, 1)
+        self.heatmap_image.setImage(data, autoLevels=True)
+        # Set the plot range to match the number of rotors
+        self.heatmap_plot.setXRange(0, omega_sq.shape[0], padding=0)
+        self.heatmap_plot.setYRange(0, 1, padding=0)
 
     def set_j_callback(self, callback: Callable[[float], None]):
         self.j_callback = callback

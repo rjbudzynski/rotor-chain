@@ -63,6 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_state = self.y0.copy()
         self.visualizer.update_rotors(self.current_state[:n_rotors])
         self.update_energy_display()
+        self.controls.update_energy_heatmap(self.current_state[n_rotors:]**2)
 
     def get_initial_state(self) -> np.ndarray:
         """Generate initial state based on the selected preset."""
@@ -152,6 +153,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_energy_display()
         # Update order plot on reset
         self.controls.update_order_plot([], [])
+        # Update heatmap on reset
+        self.controls.update_energy_heatmap(self.current_state[self.n_rotors:]**2)
 
     def update_energy_display(self):
         energy = self.chain.hamiltonian(self.current_state)
@@ -168,6 +171,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # Calculate order parameter r
             theta = self.current_state[:self.n_rotors]
+            omega = self.current_state[self.n_rotors:]
             r = np.sqrt(np.mean(np.cos(theta))**2 + np.mean(np.sin(theta))**2)
             self.order_history.append((self.current_time, r))
             
@@ -183,6 +187,9 @@ class MainWindow(QtWidgets.QMainWindow):
             times = [h[0] for h in self.order_history]
             values = [h[1] for h in self.order_history]
             self.controls.update_order_plot(times, values)
+            
+            # Update kinetic energy heatmap
+            self.controls.update_energy_heatmap(omega**2)
 
 def main():
     QtCore.QCoreApplication.setApplicationName("RotorChainSimulation")

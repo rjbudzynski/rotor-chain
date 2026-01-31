@@ -27,6 +27,7 @@ The system consists of $N$ rotors arranged in a circle. Each rotor interacts wit
 - **Reset**: Restores initial conditions and stops the timer.
 - **Energy per Rotor**: Monitors numerical stability. In a closed system ($M=0$ or constant parameters), this should be conserved.
 - **Order Parameter Plot**: Shows the history of system synchronization over the last 10 seconds.
+- **Kinetic Energy Heatmap**: A real-time visualization of the energy distribution across the chain. Each rectangle represents a rotor, colored by its speed squared.
 
 ## Visualization
 - **White Needles**: Individual rotors.
@@ -34,3 +35,4 @@ The system consists of $N$ rotors arranged in a circle. Each rotor interacts wit
 - **Yellow Arrow**: Points in the mean direction of the system; its length represents the synchronization level (r).
 - **Grey Circle**: Path of the rotor centers.
 - **Yellow Circle**: Reference for maximum synchronization (r=1).
+- **Heatmap strip**: Brighter colors (using the 'inferno' scale) indicate higher kinetic energy for that specific rotor.
