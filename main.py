@@ -1,6 +1,7 @@
 import sys
+import os
 import numpy as np
-from PyQt6 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore, QtGui
 from simulation import RotorChain, SimulationParams
 from visualizer import RotorVisualizer
 from ui import ControlPanel
@@ -13,6 +14,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, n_rotors: int):
         super().__init__()
         self.setWindowTitle("Rotor Chain Simulation")
+        
+        # Set window icon
+        icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QtGui.QIcon(icon_path))
         
         # Simulation parameters
         self.n_rotors = n_rotors
@@ -180,6 +186,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
+    app.setApplicationName("RotorChainSimulation")
+    app.setApplicationDisplayName("Rotor Chain Simulation")
+    app.setOrganizationName("RotorChainProject")
+    
+    # Set application icon
+    icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QtGui.QIcon(icon_path))
     
     n_rotors = 50
     window = MainWindow(n_rotors)
