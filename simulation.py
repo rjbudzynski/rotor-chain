@@ -61,7 +61,7 @@ class RotorChain:
         theta_minus = np.roll(theta, 1)
         
         d_theta = omega
-        d_omega = (self.params.j_coupling * (np.sin(theta - theta_plus) + np.sin(theta - theta_minus)) 
+        d_omega = (-self.params.j_coupling * (np.sin(theta - theta_plus) + np.sin(theta - theta_minus)) 
                    - self.params.m_field * np.sin(theta))
         
         return np.concatenate([d_theta, d_omega])
@@ -83,9 +83,9 @@ class RotorChain:
         kinetic = 0.5 * np.sum(omega**2)
         
         theta_plus = np.roll(theta, -1)
-        # Potential term: -J * sum(1 - cos(theta_i - theta_{i+1}))
-        # Note: we sum over all i, which counts each neighbor pair once in this circular chain.
-        potential = -self.params.j_coupling * np.sum(1 - np.cos(theta - theta_plus))
+        # Potential term: J * sum(1 - cos(theta_i - theta_{i+1}))
+        # With J > 0, this has a minimum (0) at alignment (theta_i = theta_{i+1})
+        potential = self.params.j_coupling * np.sum(1 - np.cos(theta - theta_plus))
         
         # Field term: -M * sum(cos(theta_i))
         field = -self.params.m_field * np.sum(np.cos(theta))

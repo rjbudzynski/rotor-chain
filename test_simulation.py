@@ -37,14 +37,14 @@ def test_periodic_boundary_conditions():
     y = np.array([0.1, 0.2, 0.3, 0.0, 0.0, 0.0])
     dy = chain.equations_of_motion(0, y)
     
-    # d_omega_0 = J * (sin(theta_0 - theta_1) + sin(theta_0 - theta_2))
-    # d_omega_0 = 1.0 * (sin(0.1 - 0.2) + sin(0.1 - 0.3))
-    expected_d_omega_0 = (np.sin(0.1 - 0.2) + np.sin(0.1 - 0.3))
+    # d_omega_0 = -J * (sin(theta_0 - theta_1) + sin(theta_0 - theta_2))
+    # d_omega_0 = -1.0 * (sin(0.1 - 0.2) + sin(0.1 - 0.3))
+    expected_d_omega_0 = -(np.sin(0.1 - 0.2) + np.sin(0.1 - 0.3))
     assert np.isclose(dy[3], expected_d_omega_0)
     
-    # d_omega_2 = J * (sin(theta_2 - theta_0) + sin(theta_2 - theta_1))
-    # d_omega_2 = 1.0 * (sin(0.3 - 0.1) + sin(0.3 - 0.2))
-    expected_d_omega_2 = (np.sin(0.3 - 0.1) + np.sin(0.3 - 0.2))
+    # d_omega_2 = -J * (sin(theta_2 - theta_0) + sin(theta_2 - theta_1))
+    # d_omega_2 = -1.0 * (sin(0.3 - 0.1) + sin(0.3 - 0.2))
+    expected_d_omega_2 = -(np.sin(0.3 - 0.1) + np.sin(0.3 - 0.2))
     assert np.isclose(dy[5], expected_d_omega_2)
 
 def test_external_field():

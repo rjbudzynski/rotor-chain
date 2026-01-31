@@ -6,7 +6,7 @@ An interactive simulation of a Hamiltonian dynamical system consisting of $N$ co
 
 The system is a linear chain of $N$ rotors with periodic boundary conditions ($\theta_{N+1} \equiv \theta_1$). The dynamics are governed by the Hamiltonian:
 
-$$H = \frac{1}{2}\sum_{i=1}^N \omega_i^2 - J\sum_{i=1}^N (1 - \cos(\theta_i - \theta_{i+1})) - M\sum_{i=1}^N \cos \theta_i$$
+$$H = \frac{1}{2}\sum_{i=1}^N \omega_i^2 + J\sum_{i=1}^N (1 - \cos(\theta_i - \theta_{i+1})) - M\sum_{i=1}^N \cos \theta_i$$
 
 Where:
 - $\theta_i$ is the angle of the $i$-th rotor.
@@ -16,7 +16,7 @@ Where:
 
 The equations of motion are derived as:
 - $\dot{\theta}_i = \omega_i$
-- $\dot{\omega}_i = J(\sin(\theta_i - \theta_{i+1}) + \sin(\theta_i - \theta_{i-1})) - M\sin \theta_i$
+- $\dot{\omega}_i = -J(\sin(\theta_i - \theta_{i+1}) + \sin(\theta_i - \theta_{i-1})) - M\sin \theta_i$
 
 ## Implementation
 
