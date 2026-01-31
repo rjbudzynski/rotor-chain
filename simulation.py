@@ -29,6 +29,13 @@ class RotorChain:
         """
         Calculate the time derivatives of the state vector.
         
+        The equations of motion are derived from the Hamiltonian:
+        d_theta_i/dt = omega_i
+        d_omega_i/dt = -dH/d_theta_i
+        
+        For H = 1/2*sum(omega_i^2) + J*sum(1 - cos(theta_i - theta_{i+1})) - M*sum(cos(theta_i)):
+        d_omega_i/dt = -J * (sin(theta_i - theta_{i+1}) + sin(theta_i - theta_{i-1})) - M * sin(theta_i)
+        
         Args:
             t: Current time.
             y: State vector [theta_0, ..., theta_{n-1}, omega_0, ..., omega_{n-1}].
@@ -39,23 +46,6 @@ class RotorChain:
         n = self.params.n_rotors
         theta = y[:n]
         omega = y[n:]
-        
-        # d_omega = -dH/d_theta
-        # dH/d_theta = J * sin(theta_i - theta_{i+1}) - J * sin(theta_{i-1} - theta_i) - M
-        #            = J * sin(theta_i - theta_{i+1}) + J * sin(theta_i - theta_{i-1}) - M
-        # So d_omega = -J * sin(theta_i - theta_{i+1}) - J * sin(theta_i - theta_{i-1}) + M
-        # Wait, I previously had this same formula. Let's re-verify the derivative.
-        
-        # H = 0.5 * sum(omega^2) - J * sum(1 - cos(theta_i - theta_{i+1})) - M * sum(theta_i)
-        # dH/d_theta_i = -J * d/d_theta_i [ (1 - cos(theta_i - theta_{i+1})) + (1 - cos(theta_{i-1} - theta_i)) ] - M
-        # d/d_theta_i [1 - cos(theta_i - theta_{i+1})] = sin(theta_i - theta_{i+1})
-        # d/d_theta_i [1 - cos(theta_{i-1} - theta_i)] = -sin(theta_{i-1} - theta_i) = sin(theta_i - theta_{i-1})
-        # So dH/d_theta_i = -J * (sin(theta_i - theta_{i+1}) + sin(theta_i - theta_{i-1})) - M
-        # d_omega_i = -dH/d_theta_i = J * (sin(theta_i - theta_{i+1}) + sin(theta_i - theta_{i-1})) + M
-        
-        # H_field = -M * sum(cos(theta_i))
-        # dH/d_theta_i = M * sin(theta_i)
-        # d_omega_i = -dH/d_theta_i = -M * sin(theta_i)
         
         theta_plus = np.roll(theta, -1)
         theta_minus = np.roll(theta, 1)
@@ -114,3 +104,55 @@ class RotorChain:
             atol=1e-10
         )
         return sol
+
+class SimulationEngine:
+    """
+    Manages the physical state and integration of the rotor chain simulation.
+    """
+    
+    def __init__(self, params: SimulationParams):
+        self.params = params
+        self.chain = RotorChain(params)
+        self.y = np.zeros(2 * params.n_rotors)
+        self.t = 0.0
+        
+    def set_state(self, y: np.ndarray, t: float = 0.0):
+        """Set the current state of the simulation."""
+        self.y = y.copy()
+        self.t = t
+        
+    def update_params(self, j: float = None, m: float = None):
+        """Update simulation parameters without resetting the state."""
+        n = self.params.n_rotors
+        j = j if j is not None else self.params.j_coupling
+        m = m if m is not None else self.params.m_field
+        self.params = SimulationParams(n_rotors=n, j_coupling=j, m_field=m)
+        self.chain.params = self.params
+
+    def step(self, dt: float) -> bool:
+        """Advance the simulation by dt. Returns True if successful."""
+        t_span = (self.t, self.t + dt)
+        sol = self.chain.simulate(self.y, t_span)
+        if sol.success:
+            self.y = sol.y[:, -1]
+            self.t += dt
+        return sol.success
+
+    @property
+    def theta(self) -> np.ndarray:
+        return self.y[:self.params.n_rotors]
+
+    @property
+    def omega(self) -> np.ndarray:
+        return self.y[self.params.n_rotors:]
+    
+    def get_energy(self) -> float:
+        """Calculate total energy of the current state."""
+        return self.chain.hamiltonian(self.y)
+    
+    def get_order_parameter(self) -> float:
+        """Calculate the phase order parameter r."""
+        theta = self.theta
+        r = np.sqrt(np.mean(np.cos(theta))**2 + np.mean(np.sin(theta))**2)
+        return r
+
