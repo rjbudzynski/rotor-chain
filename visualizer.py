@@ -9,7 +9,6 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
 
     def __init__(self, n_rotors: int, parent=None):
         super().__init__(parent=parent)
-        self.n_rotors = n_rotors
         
         # Configure the plot
         self.plot = self.addPlot()
@@ -22,20 +21,13 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
         self.r_circle = 10.0
         # Rotate the whole picture: offset by -pi/2
         self.rotation_offset = -np.pi / 2
-        
-        # Internal phi (spacing)
-        self.phi_internal = np.linspace(0, 2 * np.pi, n_rotors, endpoint=False)
-        # Plot phi (rotated)
-        self.phi_plot = self.phi_internal + self.rotation_offset
+        self.mean_max_radius = 5.0
         
         # Stabilization: Fix the range so the circle doesn't jump
         padding = 3.0
         self.plot.setXRange(-self.r_circle - padding, self.r_circle + padding)
         self.plot.setYRange(-self.r_circle - padding, self.r_circle + padding)
         self.plot.setMouseEnabled(x=False, y=False)
-        
-        self.centers_x = self.r_circle * np.cos(self.phi_plot)
-        self.centers_y = self.r_circle * np.sin(self.phi_plot)
         
         # --- Reference Circles ---
         
@@ -50,8 +42,6 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
         )
 
         # 2. Concentric circles for mean orientation magnitude
-        self.mean_max_radius = 5.0
-        
         # Intermediate circles (r=0.25, 0.5, 0.75) - faint
         for r_factor in [0.25, 0.5, 0.75]:
             radius = self.mean_max_radius * r_factor
@@ -72,17 +62,12 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
 
         # --- Dynamic Elements ---
 
-        # Length of the "compass needles" scales with N to fill space without overlap
-        # Spacing is ~ 2*pi*R / N. We use half of that as length.
-        self.needle_length = min(3.5, (np.pi * self.r_circle) / n_rotors)
-
         # Rotor needles
-        self.needles = pg.PlotCurveItem(pen=pg.mkPen('w', width=max(1, min(3, 100 // n_rotors))))
+        self.needles = pg.PlotCurveItem()
         self.plot.addItem(self.needles)
         
-        # Colored dots at the tips - also scale size slightly
-        tip_size = max(3, min(12, 250 // n_rotors))
-        self.tips = pg.ScatterPlotItem(size=tip_size, pen=None, brush='r')
+        # Colored dots at the tips
+        self.tips = pg.ScatterPlotItem(pen=None, brush='r')
         self.plot.addItem(self.tips)
         
         # Mean direction needle (centered at origin)
@@ -92,6 +77,28 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
         # Arrowhead for mean direction
         self.mean_arrow = pg.ArrowItem(angle=0, tipAngle=30, baseAngle=20, headLen=15, tailLen=0, brush='y', pen=None)
         self.plot.addItem(self.mean_arrow)
+
+        self.set_n_rotors(n_rotors)
+
+    def set_n_rotors(self, n_rotors: int):
+        """Update the number of rotors and rebuild dependent geometry."""
+        self.n_rotors = n_rotors
+        
+        # Internal phi (spacing)
+        self.phi_internal = np.linspace(0, 2 * np.pi, n_rotors, endpoint=False)
+        # Plot phi (rotated)
+        self.phi_plot = self.phi_internal + self.rotation_offset
+        
+        self.centers_x = self.r_circle * np.cos(self.phi_plot)
+        self.centers_y = self.r_circle * np.sin(self.phi_plot)
+
+        # Length of the "compass needles" scales with N to fill space without overlap
+        self.needle_length = min(3.5, (np.pi * self.r_circle) / n_rotors)
+        
+        # Scale needle width and tip size
+        self.needles.setPen(pg.mkPen('w', width=max(1, min(3, 100 // n_rotors))))
+        tip_size = max(3, min(12, 250 // n_rotors))
+        self.tips.setSize(tip_size)
 
     def update_rotors(self, theta: np.ndarray):
         """

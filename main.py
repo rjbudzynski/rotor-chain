@@ -105,11 +105,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.y0 = self.get_initial_state()
         self.engine.set_state(self.y0)
         
-        # Re-initialize visualizer
-        self.layout.removeWidget(self.visualizer)
-        self.visualizer.deleteLater()
-        self.visualizer = RotorVisualizer(n_rotors)
-        self.layout.insertWidget(0, self.visualizer, stretch=4)
+        # Update visualizer number of rotors
+        self.visualizer.set_n_rotors(n_rotors)
         
         self.reset_simulation()
 
