@@ -56,7 +56,7 @@
     if (chart) chart.destroy();
   });
 
-  $: if (chart && data && data[0].length > 0) {
+  $: if (chart && data && xRange) {
     chart.setData(data);
     chart.setScale("x", { min: xRange[0], max: xRange[1] });
   }
