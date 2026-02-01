@@ -32,7 +32,7 @@
   }
 </script>
 
-<canvas bind:this={canvas} width="250" height="40"></canvas>
+<canvas bind:this={canvas} width="248" height="40"></canvas>
 
 <style>
   canvas {

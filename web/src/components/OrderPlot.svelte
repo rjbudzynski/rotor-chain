@@ -11,9 +11,11 @@
 
   onMount(() => {
     const opts: uPlot.Options = {
-      width: 250,
-      height: 150,
-      padding: [5, 5, 0, 5],
+      width: 248,
+      height: 120,
+      padding: [5, 10, 5, 5],
+      cursor: { show: false },
+      legend: { show: false },
       scales: {
         x: { time: false, range: () => xRange },
         y: { range: [0, 1.05] }
@@ -27,7 +29,9 @@
       ],
       axes: [
         { 
+          stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
+          font: "10px sans-serif",
           splits: (self, min, max) => {
             const res = [];
             for (let v = Math.ceil(min / 5) * 5; v <= max; v += 5) {
@@ -37,7 +41,9 @@
           },
         },
         { 
+          stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
+          font: "10px sans-serif",
           values: (self, ticks) => ticks.map(v => v.toFixed(1)),
           splits: [0, 0.5, 1.0],
         }
