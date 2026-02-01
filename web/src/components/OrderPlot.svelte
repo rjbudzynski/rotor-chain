@@ -13,16 +13,12 @@
     const opts: uPlot.Options = {
       width: 250,
       height: 120,
-      padding: [10, 10, 10, 10],
+      padding: [4, 4, 4, 4],
       cursor: { show: false },
       legend: { show: false },
       scales: {
-        x: { 
-          time: false,
-        },
-        y: { 
-          range: [0, 1.05] 
-        }
+        x: { time: false },
+        y: { range: [0, 1.05] }
       },
       series: [
         {},
@@ -33,16 +29,18 @@
       ],
       axes: [
         { 
+          side: 2,
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 25,
+          size: 18,
         },
         { 
+          side: 3,
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 35,
+          size: 28,
           values: (self, ticks) => ticks.map(v => v.toFixed(1)),
           splits: [0, 0.5, 1.0],
         }

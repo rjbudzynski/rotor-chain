@@ -52,6 +52,7 @@
     }
 
     engine.setState(initialTheta, initialOmega);
+    engine.t = 0;
     updateStateVars();
     orderHistory = [[], []];
     xRange = [0, 10];
