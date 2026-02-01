@@ -84,6 +84,10 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
         """Update the number of rotors and rebuild dependent geometry."""
         self.n_rotors = n_rotors
         
+        # Clear existing visual data to prevent artifacts
+        self.needles.setData([], [])
+        self.tips.setData([], [])
+        
         # Internal phi (spacing)
         self.phi_internal = np.linspace(0, 2 * np.pi, n_rotors, endpoint=False)
         # Plot phi (rotated)
@@ -100,13 +104,20 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
         tip_size = max(3, min(12, 250 // n_rotors))
         self.tips.setSize(tip_size)
 
-    def update_rotors(self, theta: np.ndarray):
+    def update_rotors(self, theta: np.ndarray, r: float = None, mean_cos: float = None, mean_sin: float = None):
         """
         Update the visualization with new rotor angles.
         
         Args:
             theta: Array of rotor angles.
+            r: Optional pre-calculated order parameter magnitude.
+            mean_cos: Optional pre-calculated mean of cos(theta).
+            mean_sin: Optional pre-calculated mean of sin(theta).
         """
+        if len(theta) != self.n_rotors:
+            # Silently ignore mismatches that may occur during rapid N transitions
+            return
+
         # Absolute angle in the plot: theta=0 is radial + rotation offset
         angle = self.phi_plot + theta
         
@@ -135,11 +146,12 @@ class RotorVisualizer(pg.GraphicsLayoutWidget):
         self.tips.setData(x1, y1)
 
         # Update mean direction
-        # 1. The length represents the internal order parameter
-        mean_theta_x = np.mean(np.cos(theta))
-        mean_theta_y = np.mean(np.sin(theta))
-        r = np.sqrt(mean_theta_x**2 + mean_theta_y**2)
-        mean_theta = np.arctan2(mean_theta_y, mean_theta_x)
+        if r is None or mean_cos is None or mean_sin is None:
+            mean_cos = np.mean(np.cos(theta))
+            mean_sin = np.mean(np.sin(theta))
+            r = np.sqrt(mean_cos**2 + mean_sin**2)
+        
+        mean_theta = np.arctan2(mean_sin, mean_cos)
         
         # 2. Visual mean direction (rotated)
         # If mean_theta=0, it points vertical down. 

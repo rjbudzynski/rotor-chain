@@ -43,10 +43,10 @@ def test_engine_get_order_parameter():
     engine = SimulationEngine(params)
     # All at 0 => r = 1
     engine.set_state(np.zeros(20))
-    assert engine.get_order_parameter() == pytest.approx(1.0)
+    assert engine.get_order_parameter().r == pytest.approx(1.0)
     
     # Spread out => r < 1
     y = np.zeros(20)
     y[:10] = np.linspace(0, 2*np.pi, 10, endpoint=False)
     engine.set_state(y)
-    assert engine.get_order_parameter() == pytest.approx(0.0)
+    assert engine.get_order_parameter().r == pytest.approx(0.0)

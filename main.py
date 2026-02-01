@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+from collections import deque
 from PyQt6 import QtWidgets, QtCore, QtGui
 from simulation import SimulationEngine, SimulationParams
 from visualizer import RotorVisualizer
@@ -30,7 +31,8 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # UI State
         self.dt = 0.02
-        self.order_history: list[tuple[float, float]] = []
+        self.time_scale = 1.0
+        self.order_history: deque[tuple[float, float]] = deque()
         
         # UI
         self.central_widget = QtWidgets.QWidget()
@@ -49,6 +51,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.controls.k_spin.valueChanged.connect(lambda: self.reinit_simulation(self.n_rotors))
         self.controls.set_j_callback(self.update_j)
         self.controls.set_m_callback(self.update_m)
+        self.controls.set_time_callback(self.update_time_scale)
         self.controls.start_stop_button.toggled.connect(self.toggle_simulation)
         self.controls.reset_button.clicked.connect(self.reset_simulation)
         self.controls.help_button.clicked.connect(self.show_help)
@@ -119,6 +122,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.m_field = m
         self.engine.update_params(m=m)
 
+    def update_time_scale(self, scale: float):
+        self.time_scale = scale
+        # Update engine substeps to keep internal_dt constant (0.002)
+        # 0.02 * scale / substeps = 0.002 => substeps = 10 * scale
+        self.engine.substeps = int(np.ceil(10 * scale))
+
     def toggle_simulation(self, started: bool):
         self.controls.set_simulation_running(started)
         if started:
@@ -149,7 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # This will trigger toggle_simulation(False) and stop the timer
         
         self.engine.set_state(self.y0)
-        self.order_history = []
+        self.order_history.clear()
         self.visualizer.update_rotors(self.engine.theta)
         # Update energy display on reset
         self.update_energy_display()
@@ -164,19 +173,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.controls.energy_label.setText(f"Energy per Rotor: {mean_energy:.4f}")
 
     def simulation_step(self):
-        success = self.engine.step(self.dt)
+        success = self.engine.step(self.dt * self.time_scale)
         
         if success:
             # Calculate order parameter r
-            r = self.engine.get_order_parameter()
-            self.order_history.append((self.engine.t, r))
+            op = self.engine.get_order_parameter()
+            self.order_history.append((self.engine.t, op.r))
             
             # Prune history to 10s window
             while self.order_history and self.order_history[0][0] < self.engine.t - 10:
-                self.order_history.pop(0)
+                self.order_history.popleft()
             
             # Update visualization
-            self.visualizer.update_rotors(self.engine.theta)
+            self.visualizer.update_rotors(self.engine.theta, r=op.r, mean_cos=op.mean_cos, mean_sin=op.mean_sin)
             self.update_energy_display()
             
             # Update order parameter plot

@@ -112,6 +112,12 @@ class RotorChain:
         )
         return sol
 
+class OrderParameter(NamedTuple):
+    """Result of the phase order parameter calculation."""
+    r: float
+    mean_cos: float
+    mean_sin: float
+
 class SimulationEngine:
     """
     Manages the physical state and integration of the rotor chain simulation.
@@ -180,28 +186,11 @@ class SimulationEngine:
         """Calculate total energy of the current state."""
         return self.chain.hamiltonian(self.y)
     
-    def get_order_parameter(self) -> float:
-        """Calculate the phase order parameter r."""
+    def get_order_parameter(self) -> OrderParameter:
+        """Calculate the phase order parameter r and its components."""
         theta = self.theta
-        r = np.sqrt(np.mean(np.cos(theta))**2 + np.mean(np.sin(theta))**2)
-        return r
-
-
-    @property
-    def theta(self) -> np.ndarray:
-        return self.y[:self.params.n_rotors]
-
-    @property
-    def omega(self) -> np.ndarray:
-        return self.y[self.params.n_rotors:]
-    
-    def get_energy(self) -> float:
-        """Calculate total energy of the current state."""
-        return self.chain.hamiltonian(self.y)
-    
-    def get_order_parameter(self) -> float:
-        """Calculate the phase order parameter r."""
-        theta = self.theta
-        r = np.sqrt(np.mean(np.cos(theta))**2 + np.mean(np.sin(theta))**2)
-        return r
+        mean_cos = np.mean(np.cos(theta))
+        mean_sin = np.mean(np.sin(theta))
+        r = np.sqrt(mean_cos**2 + mean_sin**2)
+        return OrderParameter(r, mean_cos, mean_sin)
 

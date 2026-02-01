@@ -105,6 +105,15 @@ class ControlPanel(QtWidgets.QWidget):
         self.layout.addWidget(self.m_label)
         self.layout.addWidget(self.m_slider)
         
+        # Time Scale slider
+        self.time_label = QtWidgets.QLabel("Time Scale: 1.0x")
+        self.time_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.time_slider.setRange(10, 500)  # 0.1x to 5.0x
+        self.time_slider.setValue(100)
+        self.time_slider.valueChanged.connect(self._on_time_changed)
+        self.layout.addWidget(self.time_label)
+        self.layout.addWidget(self.time_slider)
+        
         self.layout.addSpacing(20)
         
         # Buttons
@@ -168,6 +177,7 @@ class ControlPanel(QtWidgets.QWidget):
         # Callbacks for external connection
         self.j_callback: Callable[[float], None] = lambda x: None
         self.m_callback: Callable[[float], None] = lambda x: None
+        self.time_callback: Callable[[float], None] = lambda x: None
 
     def _handle_preset_ui_change(self, index: int):
         # 1: "Twisted", 3: "Single Kick"
@@ -193,6 +203,11 @@ class ControlPanel(QtWidgets.QWidget):
         m = value / 100.0
         self.m_label.setText(f"Field (M): {m:.2f}")
         self.m_callback(m)
+
+    def _on_time_changed(self, value: int):
+        scale = value / 100.0
+        self.time_label.setText(f"Time Scale: {scale:.1f}x")
+        self.time_callback(scale)
 
     def update_order_plot(self, times: list[float], values: list[float]):
         """Update the order parameter plot with new data."""
@@ -221,6 +236,9 @@ class ControlPanel(QtWidgets.QWidget):
 
     def set_m_callback(self, callback: Callable[[float], None]):
         self.m_callback = callback
+
+    def set_time_callback(self, callback: Callable[[float], None]):
+        self.time_callback = callback
 
     def set_simulation_running(self, running: bool):
         """Enable or disable controls that should not be changed during simulation."""
