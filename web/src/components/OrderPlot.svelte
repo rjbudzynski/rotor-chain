@@ -11,19 +11,16 @@
 
   onMount(() => {
     const opts: uPlot.Options = {
-      width: 240,
+      width: 250,
       height: 120,
-      padding: [8, 12, 8, 8],
+      padding: [10, 10, 10, 10],
       cursor: { show: false },
       legend: { show: false },
       scales: {
         x: { 
-          time: false, 
-          auto: false,
-          range: [0, 10]
+          time: false,
         },
         y: { 
-          auto: false,
           range: [0, 1.05] 
         }
       },
@@ -32,25 +29,20 @@
         {
           stroke: "yellow",
           width: 2,
-          spanGaps: true,
         }
       ],
       axes: [
         { 
-          side: 2,
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 20,
-          space: 40,
-          values: (self, ticks) => ticks.map(v => v.toFixed(0)),
+          size: 25,
         },
         { 
-          side: 3,
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 30,
+          size: 35,
           values: (self, ticks) => ticks.map(v => v.toFixed(1)),
           splits: [0, 0.5, 1.0],
         }
@@ -64,8 +56,8 @@
     if (chart) chart.destroy();
   });
 
-  $: if (chart && data && xRange) {
-    chart.setData(data, false);
+  $: if (chart && data && data[0].length > 0) {
+    chart.setData(data);
     chart.setScale("x", { min: xRange[0], max: xRange[1] });
   }
 </script>
