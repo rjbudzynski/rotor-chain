@@ -10,12 +10,12 @@
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
 
-  const R_CIRCLE = 100; // Visual radius
+  const R_CIRCLE = 350; // Visual radius
   const ROTATION_OFFSET = -Math.PI / 2;
-  const MEAN_MAX_RADIUS = 50;
-  const PADDING = 40;
+  const MEAN_MAX_RADIUS = 175;
+  const PADDING = 50;
 
-  $: needleLength = Math.min(35, (Math.PI * R_CIRCLE) / n_rotors);
+  $: needleLength = Math.min(100, (Math.PI * R_CIRCLE) / n_rotors);
   $: phiInternal = Array.from({ length: n_rotors }, (_, i) => (2 * Math.PI * i) / n_rotors);
   $: phiPlot = phiInternal.map(p => p + ROTATION_OFFSET);
 

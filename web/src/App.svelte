@@ -20,6 +20,7 @@
   let meanSin = 0;
   let energyPerRotor = 0;
   let orderHistory: [number[], number[]] = [[], []];
+  let xRange: [number, number] = [0, 10];
 
   let frameId: number;
   const DT = 0.02;
@@ -53,6 +54,7 @@
     engine.setState(initialTheta, initialOmega);
     updateStateVars();
     orderHistory = [[], []];
+    xRange = [0, 10];
   }
 
   function updateStateVars() {
@@ -100,6 +102,12 @@
     }
     orderHistory = [newTimes, newValues];
 
+    if (engine.t > 10) {
+      xRange = [engine.t - 10, engine.t];
+    } else {
+      xRange = [0, 10];
+    }
+
     frameId = requestAnimationFrame(loop);
   }
 
@@ -127,6 +135,7 @@
       {running}
       {energyPerRotor}
       {orderHistory}
+      {xRange}
       {omegaSq}
       onToggle={toggleSimulation}
       onReset={resetSimulation}

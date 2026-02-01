@@ -9,6 +9,7 @@
   export let running: boolean;
   export let energyPerRotor: number;
   export let orderHistory: [number[], number[]];
+  export let xRange: [number, number];
   export let omegaSq: Float64Array;
   export let selectedPreset: string;
   export let kValue: number;
@@ -82,7 +83,7 @@
 
   <div class="plots">
     <span>Order Parameter (r):</span>
-    <OrderPlot data={orderHistory} />
+    <OrderPlot data={orderHistory} {xRange} />
     
     <span>Kinetic Energy Heatmap:</span>
     <Heatmap {omegaSq} />
