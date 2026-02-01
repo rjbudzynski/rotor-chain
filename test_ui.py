@@ -51,11 +51,13 @@ def test_preset_change_updates_state(app, qtbot):
     assert np.allclose(app.engine.theta, expected_theta)
 
     # Single Kick
-    app.controls.k_spin.setValue(5)
     with qtbot.waitSignal(app.controls.preset_combo.currentIndexChanged):
         app.controls.preset_combo.setCurrentIndex(3)
-    assert np.isclose(app.engine.theta[5], np.pi - 0.01)
-    assert np.allclose(app.engine.theta[[0,1,2,3,4,6,7,8,9]], 0)
+    app.controls.k_spin.setValue(5.5)
+    # n=10, so omega starts at index 10. First rotor omega is at index 10.
+    assert np.isclose(app.engine.omega[0], 5.5)
+    assert np.allclose(app.engine.theta, 0)
+    assert np.allclose(app.engine.omega[1:], 0)
 
     # Thermalized
     with qtbot.waitSignal(app.controls.preset_combo.currentIndexChanged):

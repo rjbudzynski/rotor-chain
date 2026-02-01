@@ -86,8 +86,9 @@ class MainWindow(QtWidgets.QMainWindow):
             # Tiny velocity perturbation to break unstable equilibrium
             y0[n] = 1e-6
         elif preset == "Single Kick":
-            idx = self.controls.k_spin.value() % n
-            y0[idx] = np.pi - 0.01
+            # Initial velocity kick to the first rotor
+            omega_kick = self.controls.k_spin.value()
+            y0[n] = omega_kick
         elif preset == "Thermalized":
             # Random velocities (Maxwell-Boltzmann like)
             # sigma = 1.0 for now as a default 'temperature'

@@ -66,14 +66,15 @@ class ControlPanel(QtWidgets.QWidget):
         self.layout.addWidget(self.preset_label)
         self.layout.addWidget(self.preset_combo)
         
-        # Winding number / Index for presets
+        # Winding number / Index / Velocity for presets
         self.k_widget = QtWidgets.QWidget()
         self.k_layout = QtWidgets.QHBoxLayout(self.k_widget)
         self.k_layout.setContentsMargins(0, 0, 0, 0)
         self.k_label = QtWidgets.QLabel("Winding (k):")
-        self.k_spin = QtWidgets.QSpinBox()
-        self.k_spin.setRange(-250, 250)
-        self.k_spin.setValue(1)
+        self.k_spin = QtWidgets.QDoubleSpinBox()
+        self.k_spin.setRange(-250.0, 250.0)
+        self.k_spin.setDecimals(2)
+        self.k_spin.setValue(1.0)
         self.k_layout.addWidget(self.k_label)
         self.k_layout.addWidget(self.k_spin)
         self.layout.addWidget(self.k_widget)
@@ -172,9 +173,13 @@ class ControlPanel(QtWidgets.QWidget):
         # 1: "Twisted", 3: "Single Kick"
         if index == 1:
             self.k_label.setText("Winding (k):")
+            self.k_spin.setDecimals(0)
+            self.k_spin.setSingleStep(1.0)
             self.k_widget.setVisible(True)
         elif index == 3:
-            self.k_label.setText("Rotor Index:")
+            self.k_label.setText("Velocity (\u03c9):")
+            self.k_spin.setDecimals(2)
+            self.k_spin.setSingleStep(0.1)
             self.k_widget.setVisible(True)
         else:
             self.k_widget.setVisible(False)
