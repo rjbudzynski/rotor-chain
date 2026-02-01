@@ -11,9 +11,9 @@
 
   onMount(() => {
     const opts: uPlot.Options = {
-      width: 248,
+      width: 240,
       height: 120,
-      padding: [10, 10, 20, 30],
+      padding: [8, 12, 8, 8],
       cursor: { show: false },
       legend: { show: false },
       scales: {
@@ -32,6 +32,7 @@
         {
           stroke: "yellow",
           width: 2,
+          spanGaps: true,
         }
       ],
       axes: [
@@ -40,14 +41,9 @@
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
+          size: 20,
           space: 40,
-          splits: (self, min, max) => {
-            const res = [];
-            for (let v = Math.ceil(min / 5) * 5; v <= max; v += 5) {
-              res.push(v);
-            }
-            return res;
-          },
+          values: (self, ticks) => ticks.map(v => v.toFixed(0)),
         },
         { 
           side: 3,
@@ -68,7 +64,7 @@
     if (chart) chart.destroy();
   });
 
-  $: if (chart && data) {
+  $: if (chart && data && xRange) {
     chart.setData(data, false);
     chart.setScale("x", { min: xRange[0], max: xRange[1] });
   }
