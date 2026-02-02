@@ -1,53 +1,56 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
 
-  export let n_rotors: number;
-  export let theta: Float64Array;
-  export let r: number;
-  export let meanCos: number;
-  export let meanSin: number;
+  let { n_rotors, theta, r, meanCos, meanSin } = $props<{
+    n_rotors: number;
+    theta: Float64Array;
+    r: number;
+    meanCos: number;
+    meanSin: number;
+  }>();
 
-  let canvas: HTMLCanvasElement;
-  let container: HTMLDivElement;
-  let ctx: CanvasRenderingContext2D | null = null;
+  let canvas = $state<HTMLCanvasElement>();
+  let container = $state<HTMLDivElement>();
+  let ctx = $state<CanvasRenderingContext2D | null>(null);
 
-  let width = 600;
-  let height = 600;
+  let width = $state(600);
+  let height = $state(600);
 
-  $: size = Math.min(width, height);
-  $: R_CIRCLE = size * 0.4;
-  $: MEAN_MAX_RADIUS = R_CIRCLE * 0.5;
-  $: PADDING = size * 0.05;
-
+  let size = $derived(Math.min(width, height));
+  let R_CIRCLE = $derived(size * 0.4);
+  let MEAN_MAX_RADIUS = $derived(R_CIRCLE * 0.5);
+  
   // ROTATION_OFFSET = Math.PI / 2 makes theta=0 (field alignment) point vertical down in Canvas2D
   const ROTATION_OFFSET = Math.PI / 2;
 
-  $: needleLength = Math.min(size * 0.1, (Math.PI * R_CIRCLE) / n_rotors);
-  $: phiInternal = Array.from({ length: n_rotors }, (_, i) => (2 * Math.PI * i) / n_rotors);
-  $: phiPlot = phiInternal.map(p => p + ROTATION_OFFSET);
+  let needleLength = $derived(Math.min(size * 0.1, (Math.PI * R_CIRCLE) / n_rotors));
+  let phiInternal = $derived(Array.from({ length: n_rotors }, (_, i) => (2 * Math.PI * i) / n_rotors));
+  let phiPlot = $derived(phiInternal.map(p => p + ROTATION_OFFSET));
 
   let resizeObserver: ResizeObserver;
 
   onMount(() => {
-    ctx = canvas.getContext('2d');
+    if (canvas) {
+      ctx = canvas.getContext('2d');
+    }
     
-    resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        width = entry.contentRect.width;
-        height = entry.contentRect.height;
-      }
-    });
-    resizeObserver.observe(container);
-    
-    draw();
+    if (container) {
+      resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+          width = entry.contentRect.width;
+          height = entry.contentRect.height;
+        }
+      });
+      resizeObserver.observe(container);
+    }
   });
 
   onDestroy(() => {
     if (resizeObserver) resizeObserver.disconnect();
   });
 
-  export function draw() {
-    if (!ctx || !canvas) return;
+  function draw() {
+    if (!ctx || !canvas || size <= 0) return;
 
     const centerX = width / 2;
     const centerY = height / 2;
@@ -136,9 +139,12 @@
     ctx.fill();
   }
 
-  $: if (theta || width || height) {
-    draw();
-  }
+  $effect(() => {
+    // This effect runs when any of its dependencies (theta, width, height, ctx) change
+    if (theta && ctx && width > 0 && height > 0) {
+      draw();
+    }
+  });
 </script>
 
 <div class="visualizer-container" bind:this={container}>

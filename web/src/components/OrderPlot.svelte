@@ -3,10 +3,12 @@
   import uPlot from 'uplot';
   import 'uplot/dist/uPlot.min.css';
 
-  export let data: [number[], number[]]; // [times, values]
-  export let xRange: [number, number];
+  let { data, xRange } = $props<{
+    data: [number[], number[]];
+    xRange: [number, number];
+  }>();
 
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement>();
   let chart: uPlot;
 
   onMount(() => {
@@ -47,17 +49,21 @@
       ]
     };
 
-    chart = new uPlot(opts, data, container);
+    if (container) {
+      chart = new uPlot(opts, data, container);
+    }
   });
 
   onDestroy(() => {
     if (chart) chart.destroy();
   });
 
-  $: if (chart && data && xRange) {
-    chart.setData(data);
-    chart.setScale("x", { min: xRange[0], max: xRange[1] });
-  }
+  $effect(() => {
+    if (chart && data && xRange) {
+      chart.setData(data);
+      chart.setScale("x", { min: xRange[0], max: xRange[1] });
+    }
+  });
 </script>
 
 <div bind:this={container}></div>

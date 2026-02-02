@@ -2,39 +2,55 @@
   import OrderPlot from './OrderPlot.svelte';
   import Heatmap from './Heatmap.svelte';
 
-  export let n_rotors: number;
-  export let j_coupling: number;
-  export let m_field: number;
-  export let time_scale: number;
-  export let running: boolean;
-  export let energyPerRotor: number;
-  export let orderHistory: [number[], number[]];
-  export let xRange: [number, number];
-  export let omegaSq: Float64Array;
-  export let selectedPreset: string;
-  export let kValue: number;
-
-  export let onToggle: () => void;
-  export let onReset: () => void;
-  export let onReinit: () => void;
+  let { 
+    n_rotors = $bindable(), 
+    j_coupling = $bindable(), 
+    m_field = $bindable(), 
+    time_scale = $bindable(), 
+    selectedPreset = $bindable(), 
+    kValue = $bindable(),
+    running, 
+    energyPerRotor, 
+    orderHistory, 
+    xRange, 
+    omegaSq, 
+    onToggle, 
+    onReset, 
+    onReinit 
+  } = $props<{
+    n_rotors: number;
+    j_coupling: number;
+    m_field: number;
+    time_scale: number;
+    selectedPreset: string;
+    kValue: number;
+    running: boolean;
+    energyPerRotor: number;
+    orderHistory: [number[], number[]];
+    xRange: [number, number];
+    omegaSq: Float64Array;
+    onToggle: () => void;
+    onReset: () => void;
+    onReinit: () => void;
+  }>();
 
   const presets = ["Random Angles", "Twisted", "Domain Wall", "Single Kick", "Thermalized"];
 
-  $: kLabel = selectedPreset === "Twisted" ? "Winding (k):" : (selectedPreset === "Single Kick" ? "Velocity (ω):" : "");
+  let kLabel = $derived(selectedPreset === "Twisted" ? "Winding (k):" : (selectedPreset === "Single Kick" ? "Velocity (ω):" : ""));
 </script>
 
 <div class="control-panel">
   <div class="group">
     <label>
       Number of Rotors (N):
-      <input type="number" bind:value={n_rotors} min="2" max="500" disabled={running} on:change={onReinit} />
+      <input type="number" bind:value={n_rotors} min="2" max="500" disabled={running} onchange={onReinit} />
     </label>
   </div>
 
   <div class="group">
     <label>
       Initial Condition Preset:
-      <select bind:value={selectedPreset} disabled={running} on:change={onReinit}>
+      <select bind:value={selectedPreset} disabled={running} onchange={onReinit}>
         {#each presets as preset}
           <option value={preset}>{preset}</option>
         {/each}
@@ -46,7 +62,7 @@
     <div class="group">
       <label>
         {kLabel}
-        <input type="number" bind:value={kValue} step={selectedPreset === "Twisted" ? 1 : 0.1} disabled={running} on:change={onReinit} />
+        <input type="number" bind:value={kValue} step={selectedPreset === "Twisted" ? 1 : 0.1} disabled={running} onchange={onReinit} />
       </label>
     </div>
   {/if}
@@ -73,8 +89,8 @@
   </div>
 
   <div class="actions">
-    <button on:click={onToggle} class:running>{running ? 'Stop' : 'Start'}</button>
-    <button on:click={onReset}>Reset</button>
+    <button onclick={onToggle} class:running>{running ? 'Stop' : 'Start'}</button>
+    <button onclick={onReset}>Reset</button>
   </div>
 
   <div class="stats">
