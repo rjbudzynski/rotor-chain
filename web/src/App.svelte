@@ -29,6 +29,7 @@
   const DT = 0.02;
 
   function initSimulation() {
+    if (n_rotors < 2) return;
     engine.setParams({ n_rotors, j_coupling, m_field });
     
     const initialTheta = new Float64Array(n_rotors);

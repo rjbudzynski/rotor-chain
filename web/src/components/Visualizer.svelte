@@ -88,7 +88,9 @@
     ctx.lineWidth = Math.max(1, Math.min(3, (size * 0.15) / props.n_rotors));
     const tipSize = Math.max(1, Math.min(6, (size * 0.25) / props.n_rotors));
 
-    for (let i = 0; i < props.n_rotors; i++) {
+    // Guard against out-of-sync theta length
+    const count = Math.min(props.n_rotors, props.theta.length);
+    for (let i = 0; i < count; i++) {
       const p = phiPlot[i];
       const angle = p + props.theta[i];
       

@@ -43,7 +43,14 @@
   <div class="group">
     <label>
       Number of Rotors (N):
-      <input type="number" bind:value={n_rotors} min="2" max="500" disabled={running} onchange={onReinit} />
+      <input 
+        type="number" 
+        value={n_rotors} 
+        min="2" 
+        max="500" 
+        disabled={running} 
+        onchange={(e) => { n_rotors = parseInt(e.currentTarget.value); onReinit(); }} 
+      />
     </label>
   </div>
 
