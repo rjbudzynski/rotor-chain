@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
 
-  // Use a single props object to maintain reactivity for passed-in values in Svelte 5
-  let props = $props<{
+  let { n_rotors, theta, r, meanCos, meanSin } = $props<{
     n_rotors: number;
     theta: Float64Array;
     r: number;
@@ -14,7 +13,6 @@
   let container = $state<HTMLDivElement>();
   let ctx = $state<CanvasRenderingContext2D | null>(null);
 
-  // Initialize with 0 and let ResizeObserver set the real values
   let width = $state(0);
   let height = $state(0);
 
@@ -24,8 +22,8 @@
   
   const ROTATION_OFFSET = Math.PI / 2;
 
-  let needleLength = $derived(Math.min(size * 0.1, (Math.PI * R_CIRCLE) / props.n_rotors));
-  let phiInternal = $derived(Array.from({ length: props.n_rotors }, (_, i) => (2 * Math.PI * i) / props.n_rotors));
+  let needleLength = $derived(Math.min(size * 0.1, (Math.PI * R_CIRCLE) / n_rotors));
+  let phiInternal = $derived(Array.from({ length: n_rotors }, (_, i) => (2 * Math.PI * i) / n_rotors));
   let phiPlot = $derived(phiInternal.map(p => p + ROTATION_OFFSET));
 
   let resizeObserver: ResizeObserver;
@@ -38,8 +36,6 @@
     if (container) {
       resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
-          // Use devicePixelRatio for crisp rendering if needed, 
-          // but for now just standard contentRect is fine.
           width = entry.contentRect.width;
           height = entry.contentRect.height;
         }
@@ -85,14 +81,14 @@
 
     // 2. Rotor Needles
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = Math.max(1, Math.min(3, (size * 0.15) / props.n_rotors));
-    const tipSize = Math.max(1, Math.min(6, (size * 0.25) / props.n_rotors));
+    ctx.lineWidth = Math.max(1, Math.min(3, (size * 0.15) / n_rotors));
+    const tipSize = Math.max(1, Math.min(6, (size * 0.25) / n_rotors));
 
     // Guard against out-of-sync theta length
-    const count = Math.min(props.n_rotors, props.theta.length);
+    const count = Math.min(n_rotors, theta.length);
     for (let i = 0; i < count; i++) {
       const p = phiPlot[i];
-      const angle = p + props.theta[i];
+      const angle = p + theta[i];
       
       const cx = R_CIRCLE * Math.cos(p);
       const cy = R_CIRCLE * Math.sin(p);
@@ -112,9 +108,9 @@
     }
 
     // 3. Mean Direction
-    const meanTheta = Math.atan2(props.meanSin, props.meanCos);
+    const meanTheta = Math.atan2(meanSin, meanCos);
     const visualMeanAngle = meanTheta + ROTATION_OFFSET;
-    const mLen = MEAN_MAX_RADIUS * props.r;
+    const mLen = MEAN_MAX_RADIUS * r;
     const mxEnd = mLen * Math.cos(visualMeanAngle);
     const myEnd = mLen * Math.sin(visualMeanAngle);
 
@@ -141,12 +137,10 @@
     ctx.fill();
   }
 
-  // Effect will trigger when any reactive property accessed inside draw() changes
   $effect(() => {
-    // Accessing props directly to ensure dependency tracking
-    if (props.theta && ctx && width > 0 && height > 0) {
-      draw();
-    }
+    // Explicitly track dependencies
+    theta; n_rotors; r; meanCos; meanSin; width; height; ctx;
+    draw();
   });
 </script>
 

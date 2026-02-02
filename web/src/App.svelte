@@ -4,6 +4,7 @@
   import Visualizer from './components/Visualizer.svelte';
   import ControlPanel from './components/ControlPanel.svelte';
 
+  // UI state
   let n_rotors = $state(50);
   let j_coupling = $state(1.0);
   let m_field = $state(0.0);
@@ -12,11 +13,11 @@
   let selectedPreset = $state("Random Angles");
   let kValue = $state(1.0);
 
-  // Initialize engine with current state
-  let engine = new SimulationEngine({ n_rotors, j_coupling, m_field });
+  // Simulation engine
+  const engine = new SimulationEngine({ n_rotors: 50, j_coupling: 1.0, m_field: 0.0 });
   
-  // Track state variables that the UI and Visualizer depend on
-  let theta = $state(engine.y.subarray(0, n_rotors));
+  // Tracked state
+  let theta = $state(engine.y.subarray(0, 50));
   let omegaSq = $state(engine.getKineticEnergies());
   let r = $state(0);
   let meanCos = $state(1);
@@ -29,7 +30,6 @@
   const DT = 0.02;
 
   function initSimulation() {
-    if (n_rotors < 2) return;
     engine.setParams({ n_rotors, j_coupling, m_field });
     
     const initialTheta = new Float64Array(n_rotors);
@@ -61,15 +61,15 @@
   }
 
   function updateStateVars() {
-    // We must re-assign to trigger Svelte's reactivity for typed arrays
-    theta = engine.y.subarray(0, n_rotors);
+    // Re-assign to trigger reactivity
+    theta = engine.y.subarray(0, engine.params.n_rotors);
     omegaSq = engine.getKineticEnergies();
     
     const op = engine.getOrderParameter();
     r = op.r;
     meanCos = op.meanCos;
     meanSin = op.meanSin;
-    energyPerRotor = engine.getEnergy() / n_rotors;
+    energyPerRotor = engine.getEnergy() / engine.params.n_rotors;
   }
 
   function toggleSimulation() {
@@ -90,27 +90,25 @@
   function loop() {
     if (!running) return;
     
-    untrack(() => {
-      engine.setParams({ j_coupling, m_field });
-      engine.substeps = Math.ceil(10 * time_scale);
-      engine.step(DT * time_scale);
-      updateStateVars();
-      
-      const newTimes = [...orderHistory[0], engine.t];
-      const newValues = [...orderHistory[1], r];
-      
-      while (newTimes.length > 0 && newTimes[0] < engine.t - 10) {
-        newTimes.shift();
-        newValues.shift();
-      }
-      orderHistory = [newTimes, newValues];
+    engine.setParams({ j_coupling, m_field });
+    engine.substeps = Math.ceil(10 * time_scale);
+    engine.step(DT * time_scale);
+    updateStateVars();
+    
+    const newTimes = [...orderHistory[0], engine.t];
+    const newValues = [...orderHistory[1], r];
+    
+    while (newTimes.length > 0 && newTimes[0] < engine.t - 10) {
+      newTimes.shift();
+      newValues.shift();
+    }
+    orderHistory = [newTimes, newValues];
 
-      if (engine.t > 10) {
-        xRange = [engine.t - 10, engine.t];
-      } else {
-        xRange = [0, 10];
-      }
-    });
+    if (engine.t > 10) {
+      xRange = [engine.t - 10, engine.t];
+    } else {
+      xRange = [0, 10];
+    }
 
     frameId = requestAnimationFrame(loop);
   }
@@ -165,7 +163,7 @@
     align-items: center;
     justify-content: center;
     background: #000;
-    min-width: 0; /* Important for flex child resizing */
+    min-width: 0;
     min-height: 0;
   }
 </style>
