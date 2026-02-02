@@ -33,7 +33,7 @@
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 22,
+          size: 26,
         },
         { 
           side: 3,
