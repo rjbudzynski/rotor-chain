@@ -13,7 +13,7 @@
     const opts: uPlot.Options = {
       width: 250,
       height: 120,
-      padding: [8, 8, 12, 12],
+      padding: [8, 12, 0, 0],
       cursor: { show: false },
       legend: { show: false },
       scales: {
@@ -33,14 +33,14 @@
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 24,
+          size: 22,
         },
         { 
           side: 3,
           stroke: "#ccc",
           grid: { show: true, stroke: "#333" },
           font: "10px sans-serif",
-          size: 36,
+          size: 30,
           values: (self, ticks) => ticks.map(v => v.toFixed(1)),
           splits: [0, 0.5, 1.0],
         }
