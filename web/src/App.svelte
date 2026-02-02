@@ -12,10 +12,11 @@
   let selectedPreset = $state("Random Angles");
   let kValue = $state(1.0);
 
-  // We initialize the engine with placeholders and set them properly in onMount/initSimulation
-  let engine = new SimulationEngine({ n_rotors: 50, j_coupling: 1.0, m_field: 0.0 });
+  // Initialize engine with current state
+  let engine = new SimulationEngine({ n_rotors, j_coupling, m_field });
   
-  let theta = $state(engine.y.subarray(0, 50));
+  // Track state variables that the UI and Visualizer depend on
+  let theta = $state(engine.y.subarray(0, n_rotors));
   let omegaSq = $state(engine.getKineticEnergies());
   let r = $state(0);
   let meanCos = $state(1);
@@ -29,7 +30,6 @@
 
   function initSimulation() {
     engine.setParams({ n_rotors, j_coupling, m_field });
-    theta = engine.y.subarray(0, n_rotors);
     
     const initialTheta = new Float64Array(n_rotors);
     const initialOmega = new Float64Array(n_rotors);
@@ -60,8 +60,10 @@
   }
 
   function updateStateVars() {
+    // We must re-assign to trigger Svelte's reactivity for typed arrays
     theta = engine.y.subarray(0, n_rotors);
     omegaSq = engine.getKineticEnergies();
+    
     const op = engine.getOrderParameter();
     r = op.r;
     meanCos = op.meanCos;
@@ -87,7 +89,6 @@
   function loop() {
     if (!running) return;
     
-    // Use untrack to prevent the loop from becoming reactive to the variables it updates
     untrack(() => {
       engine.setParams({ j_coupling, m_field });
       engine.substeps = Math.ceil(10 * time_scale);
@@ -163,5 +164,7 @@
     align-items: center;
     justify-content: center;
     background: #000;
+    min-width: 0; /* Important for flex child resizing */
+    min-height: 0;
   }
 </style>
