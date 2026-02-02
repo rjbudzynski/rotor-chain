@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
 
   export let n_rotors: number;
   export let theta: Float64Array;
@@ -8,27 +8,47 @@
   export let meanSin: number;
 
   let canvas: HTMLCanvasElement;
+  let container: HTMLDivElement;
   let ctx: CanvasRenderingContext2D | null = null;
 
-  const R_CIRCLE = 350; // Visual radius
-  const ROTATION_OFFSET = -Math.PI / 2;
-  const MEAN_MAX_RADIUS = 175;
-  const PADDING = 50;
+  let width = 600;
+  let height = 600;
 
-  $: needleLength = Math.min(100, (Math.PI * R_CIRCLE) / n_rotors);
+  $: size = Math.min(width, height);
+  $: R_CIRCLE = size * 0.4;
+  $: MEAN_MAX_RADIUS = R_CIRCLE * 0.5;
+  $: PADDING = size * 0.05;
+
+  // ROTATION_OFFSET = Math.PI / 2 makes theta=0 (field alignment) point vertical down in Canvas2D
+  const ROTATION_OFFSET = Math.PI / 2;
+
+  $: needleLength = Math.min(size * 0.1, (Math.PI * R_CIRCLE) / n_rotors);
   $: phiInternal = Array.from({ length: n_rotors }, (_, i) => (2 * Math.PI * i) / n_rotors);
   $: phiPlot = phiInternal.map(p => p + ROTATION_OFFSET);
 
+  let resizeObserver: ResizeObserver;
+
   onMount(() => {
     ctx = canvas.getContext('2d');
+    
+    resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        width = entry.contentRect.width;
+        height = entry.contentRect.height;
+      }
+    });
+    resizeObserver.observe(container);
+    
     draw();
+  });
+
+  onDestroy(() => {
+    if (resizeObserver) resizeObserver.disconnect();
   });
 
   export function draw() {
     if (!ctx || !canvas) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
     const centerX = width / 2;
     const centerY = height / 2;
 
@@ -59,8 +79,8 @@
 
     // 2. Rotor Needles
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = Math.max(1, Math.min(3, 100 / n_rotors));
-    const tipSize = Math.max(1.5, Math.min(6, 125 / n_rotors));
+    ctx.lineWidth = Math.max(1, Math.min(3, (size * 0.15) / n_rotors));
+    const tipSize = Math.max(1, Math.min(6, (size * 0.25) / n_rotors));
 
     for (let i = 0; i < n_rotors; i++) {
       const p = phiPlot[i];
@@ -106,7 +126,7 @@
   }
 
   function drawArrowhead(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number) {
-    const headlen = 10;
+    const headlen = Math.max(5, size * 0.02);
     ctx.fillStyle = '#ffff00';
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -116,22 +136,31 @@
     ctx.fill();
   }
 
-  $: if (theta) {
+  $: if (theta || width || height) {
     draw();
   }
 </script>
 
-<canvas
-  bind:this={canvas}
-  width={2 * R_CIRCLE + 2 * PADDING}
-  height={2 * R_CIRCLE + 2 * PADDING}
-  class="visualizer-canvas"
-></canvas>
+<div class="visualizer-container" bind:this={container}>
+  <canvas
+    bind:this={canvas}
+    {width}
+    {height}
+    class="visualizer-canvas"
+  ></canvas>
+</div>
 
 <style>
+  .visualizer-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
   .visualizer-canvas {
     background-color: #000;
     display: block;
-    margin: auto;
   }
 </style>
