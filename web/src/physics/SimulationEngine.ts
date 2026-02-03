@@ -10,11 +10,15 @@ export interface OrderParameter {
   meanSin: number;
 }
 
+// Constants
+const DEFAULT_SUBSTEPS = 10;  // Default substeps for time scaling
+const TWO_PI = 2 * Math.PI;  // 2π constant
+
 export class SimulationEngine {
   public params: SimulationParams;
   public y: Float64Array; // [theta_0...theta_n-1, omega_0...omega_n-1]
   public t: number = 0;
-  public substeps: number = 10;
+  public substeps: number = DEFAULT_SUBSTEPS;
 
   constructor(params: SimulationParams) {
     this.params = { ...params };
@@ -76,8 +80,8 @@ export class SimulationEngine {
     for (let i = 0; i < n; i++) {
       theta[i] += omega[i] * dt;
       // Normalize theta to [-π, π) to prevent floating-point drift
-      theta[i] = ((theta[i] + Math.PI) % (2 * Math.PI)) - Math.PI;
-      if (theta[i] < -Math.PI) theta[i] += 2 * Math.PI;
+      theta[i] = ((theta[i] + Math.PI) % TWO_PI) - Math.PI;
+      if (theta[i] < -Math.PI) theta[i] += TWO_PI;
     }
 
     // 3. v(t + dt) = v(t + dt/2) + a(t + dt) * dt/2

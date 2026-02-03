@@ -3,6 +3,22 @@ import numpy as np
 from PyQt6 import QtWidgets, QtCore, QtGui
 from typing import Callable
 
+# Constants
+MIN_ROTORS = 2  # Minimum number of rotors
+MAX_ROTORS = 500  # Maximum number of rotors
+DEFAULT_N_ROTORS = 50  # Default number of rotors
+MIN_K = -250.0  # Minimum k value
+MAX_K = 250.0  # Maximum k value
+J_SLIDER_SCALE = 100  # J slider scale factor (slider value / scale = actual)
+M_SLIDER_SCALE = 100  # M slider scale factor
+TIME_SLIDER_SCALE = 100  # Time scale slider factor
+J_SLIDER_MAX = 500  # J slider max (5.0 actual)
+M_SLIDER_MAX = 1000  # M slider max (10.0 actual)
+TIME_SLIDER_MAX = 500  # Time slider max (5.0x actual)
+ORDER_PLOT_HISTORY_SECONDS = 10  # Order plot window in seconds
+ORDER_PLOT_FIXED_HEIGHT = 150  # Order plot height in pixels
+HEATMAP_FIXED_HEIGHT = 75  # Heatmap height in pixels
+
 class HelpDialog(QtWidgets.QDialog):
     """
     A custom dialog to display help content with rich text/Markdown support.
@@ -47,8 +63,8 @@ class ControlPanel(QtWidgets.QWidget):
         # Number of rotors control
         self.n_label = QtWidgets.QLabel("Number of Rotors (N):")
         self.n_spin = QtWidgets.QSpinBox()
-        self.n_spin.setRange(2, 500)
-        self.n_spin.setValue(50)
+        self.n_spin.setRange(MIN_ROTORS, MAX_ROTORS)
+        self.n_spin.setValue(DEFAULT_N_ROTORS)
         self.layout.addWidget(self.n_label)
         self.layout.addWidget(self.n_spin)
         
@@ -72,7 +88,7 @@ class ControlPanel(QtWidgets.QWidget):
         self.k_layout.setContentsMargins(0, 0, 0, 0)
         self.k_label = QtWidgets.QLabel("Winding (k):")
         self.k_spin = QtWidgets.QDoubleSpinBox()
-        self.k_spin.setRange(-250.0, 250.0)
+        self.k_spin.setRange(MIN_K, MAX_K)
         self.k_spin.setDecimals(2)
         self.k_spin.setValue(1.0)
         self.k_layout.addWidget(self.k_label)
@@ -90,8 +106,8 @@ class ControlPanel(QtWidgets.QWidget):
         # J coupling slider
         self.j_label = QtWidgets.QLabel("Coupling (J): 1.00")
         self.j_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.j_slider.setRange(0, 500)  # 0.0 to 5.0
-        self.j_slider.setValue(100)
+        self.j_slider.setRange(0, J_SLIDER_MAX)
+        self.j_slider.setValue(J_SLIDER_SCALE)
         self.j_slider.valueChanged.connect(self._on_j_changed)
         self.layout.addWidget(self.j_label)
         self.layout.addWidget(self.j_slider)
@@ -99,7 +115,7 @@ class ControlPanel(QtWidgets.QWidget):
         # M field slider
         self.m_label = QtWidgets.QLabel("Field (M): 0.00")
         self.m_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.m_slider.setRange(0, 1000)  # 0.0 to 10.0
+        self.m_slider.setRange(0, M_SLIDER_MAX)
         self.m_slider.setValue(0)
         self.m_slider.valueChanged.connect(self._on_m_changed)
         self.layout.addWidget(self.m_label)
@@ -108,8 +124,8 @@ class ControlPanel(QtWidgets.QWidget):
         # Time Scale slider
         self.time_label = QtWidgets.QLabel("Time Scale: 1.0x")
         self.time_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.time_slider.setRange(10, 500)  # 0.1x to 5.0x
-        self.time_slider.setValue(100)
+        self.time_slider.setRange(10, TIME_SLIDER_MAX)
+        self.time_slider.setValue(TIME_SLIDER_SCALE)
         self.time_slider.valueChanged.connect(self._on_time_changed)
         self.layout.addWidget(self.time_label)
         self.layout.addWidget(self.time_slider)
@@ -140,7 +156,7 @@ class ControlPanel(QtWidgets.QWidget):
         self.order_plot.showGrid(x=True, y=True, alpha=0.3)
         self.order_plot.setYRange(0, 1.05)
         self.order_plot.setXRange(0, 10, padding=0)
-        self.order_plot.setFixedHeight(150)
+        self.order_plot.setFixedHeight(ORDER_PLOT_FIXED_HEIGHT)
         
         # Configure axes
         font = QtGui.QFont()
@@ -158,7 +174,7 @@ class ControlPanel(QtWidgets.QWidget):
         self.layout.addWidget(self.heatmap_label)
         
         self.heatmap_plot = pg.PlotWidget()
-        self.heatmap_plot.setFixedHeight(75)
+        self.heatmap_plot.setFixedHeight(HEATMAP_FIXED_HEIGHT)
         self.heatmap_plot.setMenuEnabled(False)
         self.heatmap_plot.showAxis('left', False)
         self.heatmap_plot.showAxis('bottom', False)
@@ -195,17 +211,17 @@ class ControlPanel(QtWidgets.QWidget):
             self.k_widget.setVisible(False)
 
     def _on_j_changed(self, value: int):
-        j = value / 100.0
+        j = value / J_SLIDER_SCALE
         self.j_label.setText(f"Coupling (J): {j:.2f}")
         self.j_callback(j)
 
     def _on_m_changed(self, value: int):
-        m = value / 100.0
+        m = value / M_SLIDER_SCALE
         self.m_label.setText(f"Field (M): {m:.2f}")
         self.m_callback(m)
 
     def _on_time_changed(self, value: int):
-        scale = value / 100.0
+        scale = value / TIME_SLIDER_SCALE
         self.time_label.setText(f"Time Scale: {scale:.1f}x")
         self.time_callback(scale)
 
@@ -214,12 +230,12 @@ class ControlPanel(QtWidgets.QWidget):
         self.order_curve.setData(times, values)
         if times:
             t_now = times[-1]
-            if t_now > 10:
-                self.order_plot.setXRange(t_now - 10, t_now, padding=0)
+            if t_now > ORDER_PLOT_HISTORY_SECONDS:
+                self.order_plot.setXRange(t_now - ORDER_PLOT_HISTORY_SECONDS, t_now, padding=0)
             else:
-                self.order_plot.setXRange(0, 10, padding=0)
+                self.order_plot.setXRange(0, ORDER_PLOT_HISTORY_SECONDS, padding=0)
         else:
-            self.order_plot.setXRange(0, 10, padding=0)
+            self.order_plot.setXRange(0, ORDER_PLOT_HISTORY_SECONDS, padding=0)
 
     def update_energy_heatmap(self, omega_sq: np.ndarray):
         """Update the kinetic energy heatmap."""

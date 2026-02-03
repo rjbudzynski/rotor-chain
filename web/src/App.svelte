@@ -26,8 +26,13 @@
   let xRange = $state<[number, number]>([0, 10]);
 
   let frameId: number;
-  const DT = 0.02;
-  const HISTORY_CAPACITY = 600; // 10 seconds at 60 FPS
+  
+  // Constants
+  const BASE_DT = 0.02;  // Base time step
+  const HISTORY_WINDOW_SECONDS = 10;  // History window in seconds
+  const TARGET_FPS = 60;  // Target frames per second
+  const HISTORY_CAPACITY = HISTORY_WINDOW_SECONDS * TARGET_FPS;  // 10 seconds at 60 FPS
+  const DEFAULT_SUBSTEPS = 10;  // Default substeps for time scaling
 
   // Circular buffer for order history to reduce GC pressure
   const timesBuffer = new Float64Array(HISTORY_CAPACITY);
@@ -77,7 +82,7 @@
     bufferHead = 0;
     bufferCount = 0;
     orderHistory = [[], []];
-    xRange = [0, 10];
+    xRange = [0, HISTORY_WINDOW_SECONDS];
   }
 
   function updateStateVars() {
@@ -111,8 +116,8 @@
     if (!running) return;
     
     engine.setParams({ j_coupling, m_field });
-    engine.substeps = Math.ceil(10 * time_scale);
-    engine.step(DT * time_scale);
+    engine.substeps = Math.ceil(DEFAULT_SUBSTEPS * time_scale);
+    engine.step(BASE_DT * time_scale);
     updateStateVars();
     
     // Add to circular buffer
@@ -123,17 +128,17 @@
       bufferCount++;
     }
 
-    // Remove old data (older than 10 seconds)
-    while (bufferCount > 0 && timesBuffer[(bufferHead - bufferCount + HISTORY_CAPACITY) % HISTORY_CAPACITY] < engine.t - 10) {
+    // Remove old data (older than HISTORY_WINDOW_SECONDS)
+    while (bufferCount > 0 && timesBuffer[(bufferHead - bufferCount + HISTORY_CAPACITY) % HISTORY_CAPACITY] < engine.t - HISTORY_WINDOW_SECONDS) {
       bufferCount--;
     }
 
     orderHistory = getOrderHistory();
 
-    if (engine.t > 10) {
-      xRange = [engine.t - 10, engine.t];
+    if (engine.t > HISTORY_WINDOW_SECONDS) {
+      xRange = [engine.t - HISTORY_WINDOW_SECONDS, engine.t];
     } else {
-      xRange = [0, 10];
+      xRange = [0, HISTORY_WINDOW_SECONDS];
     }
 
     frameId = requestAnimationFrame(loop);

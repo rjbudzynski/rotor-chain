@@ -2,6 +2,12 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from typing import NamedTuple, Tuple
 
+# Constants
+TWO_PI = 2 * np.pi  # 2π constant for normalization
+DEFAULT_SUBSTEPS = 10  # Default substeps for time scaling
+RTOL = 1e-8  # Relative tolerance for ODE solver
+ATOL = 1e-10  # Absolute tolerance for ODE solver
+
 class SimulationParams(NamedTuple):
     """Parameters for the rotor chain simulation."""
     n_rotors: int
@@ -107,8 +113,8 @@ class RotorChain:
             y0,
             t_eval=t_eval,
             method='RK45',
-            rtol=1e-8,
-            atol=1e-10
+            rtol=RTOL,
+            atol=ATOL
         )
         return sol
 
@@ -129,7 +135,7 @@ class SimulationEngine:
         self.y = np.zeros(2 * params.n_rotors)
         self.t = 0.0
         # Sub-stepping parameters
-        self.substeps = 10
+        self.substeps = DEFAULT_SUBSTEPS
         
     def set_state(self, y: np.ndarray, t: float = 0.0):
         """Set the current state of the simulation."""
@@ -160,7 +166,7 @@ class SimulationEngine:
         theta_new = theta + omega_mid * dt
         
         # Normalize theta to [-π, π) to prevent floating-point drift
-        theta_new = (theta_new + np.pi) % (2 * np.pi) - np.pi
+        theta_new = (theta_new + np.pi) % TWO_PI - np.pi
         
         # 3. v(t + dt) = v(t + dt/2) + a(t + dt) * dt/2
         accel_new = self.chain.get_acceleration(theta_new)

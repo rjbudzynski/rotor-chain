@@ -7,6 +7,14 @@ from simulation import SimulationEngine, SimulationParams
 from visualizer import RotorVisualizer
 from ui import ControlPanel
 
+# Constants
+BASE_DT = 0.02  # Base time step
+HISTORY_WINDOW_SECONDS = 10  # Order history window in seconds
+TARGET_FPS = 60  # Target frames per second for timer
+MIN_SUBSTEPS = 10  # Minimum substeps for time scaling
+WINDOW_WIDTH = 1000  # Default window width
+WINDOW_HEIGHT = 700  # Default window height
+
 class MainWindow(QtWidgets.QMainWindow):
     """
     Main window for the Rotor Chain simulation application.
@@ -30,7 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.engine = SimulationEngine(params)
         
         # UI State
-        self.dt = 0.02
+        self.dt = BASE_DT
         self.time_scale = 1.0
         self.order_history: deque[tuple[float, float]] = deque()
         
@@ -124,15 +132,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_time_scale(self, scale: float):
         self.time_scale = scale
-        # Update engine substeps to keep internal_dt constant (0.002)
-        # 0.02 * scale / substeps = 0.002 => substeps = 10 * scale
-        self.engine.substeps = int(np.ceil(10 * scale))
+        # Update engine substeps to keep internal_dt constant
+        # BASE_DT * scale / substeps = BASE_DT / MIN_SUBSTEPS => substeps = MIN_SUBSTEPS * scale
+        self.engine.substeps = int(np.ceil(MIN_SUBSTEPS * scale))
 
     def toggle_simulation(self, started: bool):
         self.controls.set_simulation_running(started)
         if started:
             self.controls.start_stop_button.setText("Stop")
-            self.timer.start(int(1000 / 60))
+            self.timer.start(int(1000 / TARGET_FPS))
         else:
             self.controls.start_stop_button.setText("Start")
             self.timer.stop()
@@ -180,8 +188,8 @@ class MainWindow(QtWidgets.QMainWindow):
             op = self.engine.get_order_parameter()
             self.order_history.append((self.engine.t, op.r))
             
-            # Prune history to 10s window
-            while self.order_history and self.order_history[0][0] < self.engine.t - 10:
+            # Prune history to window
+            while self.order_history and self.order_history[0][0] < self.engine.t - HISTORY_WINDOW_SECONDS:
                 self.order_history.popleft()
             
             # Update visualization
@@ -212,7 +220,7 @@ def main():
     
     n_rotors = 50
     window = MainWindow(n_rotors)
-    window.resize(1000, 700)
+    window.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
     window.show()
     
     sys.exit(app.exec())

@@ -2,6 +2,19 @@
   import OrderPlot from './OrderPlot.svelte';
   import Heatmap from './Heatmap.svelte';
 
+  // Constants
+  const MIN_ROTORS = 2;
+  const MAX_ROTORS = 500;
+  const MIN_J = 0;
+  const MAX_J = 5;
+  const MIN_M = 0;
+  const MAX_M = 10;
+  const MIN_TIME_SCALE = 0.1;
+  const MAX_TIME_SCALE = 5;
+  const STEP_J = 0.01;
+  const STEP_M = 0.01;
+  const STEP_TIME = 0.1;
+
   let { 
     n_rotors = $bindable(), 
     j_coupling = $bindable(), 
@@ -35,8 +48,6 @@
   }>();
 
   const presets = ["Random Angles", "Twisted", "Domain Wall", "Single Kick", "Thermalized"];
-  const MIN_ROTORS = 2;
-  const MAX_ROTORS = 500;
   
   // Validation state
   let nRotorsError = $state("");
@@ -131,21 +142,21 @@
   <div class="group">
     <label>
       Coupling (J): {j_coupling.toFixed(2)}
-      <input type="range" bind:value={j_coupling} min="0" max="5" step="0.01" />
+      <input type="range" bind:value={j_coupling} min={MIN_J} max={MAX_J} step={STEP_J} />
     </label>
   </div>
 
   <div class="group">
     <label>
       Field (M): {m_field.toFixed(2)}
-      <input type="range" bind:value={m_field} min="0" max="10" step="0.01" />
+      <input type="range" bind:value={m_field} min={MIN_M} max={MAX_M} step={STEP_M} />
     </label>
   </div>
 
   <div class="group">
     <label>
       Time Scale: {time_scale.toFixed(1)}x
-      <input type="range" bind:value={time_scale} min="0.1" max="5" step="0.1" />
+      <input type="range" bind:value={time_scale} min={MIN_TIME_SCALE} max={MAX_TIME_SCALE} step={STEP_TIME} />
     </label>
   </div>
 
