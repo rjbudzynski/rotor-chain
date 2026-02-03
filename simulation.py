@@ -159,6 +159,9 @@ class SimulationEngine:
         # 2. x(t + dt) = x(t) + v(t + dt/2) * dt
         theta_new = theta + omega_mid * dt
         
+        # Normalize theta to [-π, π) to prevent floating-point drift
+        theta_new = (theta_new + np.pi) % (2 * np.pi) - np.pi
+        
         # 3. v(t + dt) = v(t + dt/2) + a(t + dt) * dt/2
         accel_new = self.chain.get_acceleration(theta_new)
         omega_new = omega_mid + accel_new * (dt / 2.0)

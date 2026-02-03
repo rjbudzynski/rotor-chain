@@ -75,6 +75,9 @@ export class SimulationEngine {
     // 2. x(t + dt) = x(t) + v(t + dt/2) * dt
     for (let i = 0; i < n; i++) {
       theta[i] += omega[i] * dt;
+      // Normalize theta to [-π, π) to prevent floating-point drift
+      theta[i] = ((theta[i] + Math.PI) % (2 * Math.PI)) - Math.PI;
+      if (theta[i] < -Math.PI) theta[i] += 2 * Math.PI;
     }
 
     // 3. v(t + dt) = v(t + dt/2) + a(t + dt) * dt/2
