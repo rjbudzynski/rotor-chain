@@ -23,11 +23,29 @@
   let meanCos = $state(1);
   let meanSin = $state(0);
   let energyPerRotor = $state(0);
-  let orderHistory = $state<[number[], number[]]>([[], []]);
   let xRange = $state<[number, number]>([0, 10]);
 
   let frameId: number;
   const DT = 0.02;
+  const HISTORY_CAPACITY = 600; // 10 seconds at 60 FPS
+
+  // Circular buffer for order history to reduce GC pressure
+  const timesBuffer = new Float64Array(HISTORY_CAPACITY);
+  const valuesBuffer = new Float64Array(HISTORY_CAPACITY);
+  let bufferHead = 0;
+  let bufferCount = 0;
+  let orderHistory = $state<[number[], number[]]>([[], []]);
+
+  function getOrderHistory(): [number[], number[]] {
+    const times: number[] = new Array(bufferCount);
+    const values: number[] = new Array(bufferCount);
+    for (let i = 0; i < bufferCount; i++) {
+      const idx = (bufferHead - bufferCount + i + HISTORY_CAPACITY) % HISTORY_CAPACITY;
+      times[i] = timesBuffer[idx];
+      values[i] = valuesBuffer[idx];
+    }
+    return [times, values];
+  }
 
   function initSimulation() {
     engine.setParams({ n_rotors, j_coupling, m_field });
@@ -56,6 +74,8 @@
     engine.setState(initialTheta, initialOmega);
     engine.t = 0;
     updateStateVars();
+    bufferHead = 0;
+    bufferCount = 0;
     orderHistory = [[], []];
     xRange = [0, 10];
   }
@@ -95,14 +115,20 @@
     engine.step(DT * time_scale);
     updateStateVars();
     
-    const newTimes = [...orderHistory[0], engine.t];
-    const newValues = [...orderHistory[1], r];
-    
-    while (newTimes.length > 0 && newTimes[0] < engine.t - 10) {
-      newTimes.shift();
-      newValues.shift();
+    // Add to circular buffer
+    timesBuffer[bufferHead] = engine.t;
+    valuesBuffer[bufferHead] = r;
+    bufferHead = (bufferHead + 1) % HISTORY_CAPACITY;
+    if (bufferCount < HISTORY_CAPACITY) {
+      bufferCount++;
     }
-    orderHistory = [newTimes, newValues];
+
+    // Remove old data (older than 10 seconds)
+    while (bufferCount > 0 && timesBuffer[(bufferHead - bufferCount + HISTORY_CAPACITY) % HISTORY_CAPACITY] < engine.t - 10) {
+      bufferCount--;
+    }
+
+    orderHistory = getOrderHistory();
 
     if (engine.t > 10) {
       xRange = [engine.t - 10, engine.t];
