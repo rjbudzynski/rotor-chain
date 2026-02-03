@@ -3,6 +3,7 @@
   import { SimulationEngine } from './physics/SimulationEngine';
   import Visualizer from './components/Visualizer.svelte';
   import ControlPanel from './components/ControlPanel.svelte';
+  import HelpOverlay from './components/HelpOverlay.svelte';
 
   // UI state
   let n_rotors = $state(50);
@@ -24,6 +25,7 @@
   let meanSin = $state(0);
   let energyPerRotor = $state(0);
   let xRange = $state<[number, number]>([0, 10]);
+  let helpOpen = $state(false);
 
   let frameId: number;
   
@@ -153,6 +155,8 @@
   });
 </script>
 
+<HelpOverlay bind:isOpen={helpOpen} onClose={() => helpOpen = false} />
+
 <main>
   <div class="container">
     <div class="viz-container">
@@ -173,6 +177,7 @@
       onToggle={toggleSimulation}
       onReset={resetSimulation}
       onReinit={initSimulation}
+      onHelp={() => helpOpen = true}
     />
   </div>
 </main>

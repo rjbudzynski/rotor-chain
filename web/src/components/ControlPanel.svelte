@@ -29,7 +29,8 @@
     omegaSq, 
     onToggle, 
     onReset, 
-    onReinit 
+    onReinit,
+    onHelp 
   } = $props<{
     n_rotors: number;
     j_coupling: number;
@@ -45,6 +46,7 @@
     onToggle: () => void;
     onReset: () => void;
     onReinit: () => void;
+    onHelp?: () => void;
   }>();
 
   const presets = ["Random Angles", "Twisted", "Domain Wall", "Single Kick", "Thermalized"];
@@ -83,6 +85,10 @@
 </script>
 
 <div class="control-panel">
+  <div class="header">
+    <button class="help-btn" onclick={onHelp} title="Show Help">?</button>
+  </div>
+
   <div class="group">
     <label>
       Number of Rotors (N):
@@ -190,6 +196,29 @@
     height: 100vh;
     overflow-y: auto;
     box-sizing: border-box;
+  }
+  .header {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .help-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #444;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex: none;
+  }
+  .help-btn:hover {
+    background: #555;
   }
   .group label {
     display: flex;
