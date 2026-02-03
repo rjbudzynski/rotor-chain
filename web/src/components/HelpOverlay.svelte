@@ -3,10 +3,23 @@
 </script>
 
 {#if isOpen}
-  <div class="overlay-backdrop" onclick={onClose}>
-    <div class="overlay-content" onclick={(e) => e.stopPropagation()}>
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div 
+    class="overlay-backdrop" 
+    role="button" 
+    tabindex="0" 
+    aria-label="Close help"
+    onclick={onClose}
+    onkeydown={(e) => e.key === 'Enter' && onClose()}
+  >
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div 
+      class="overlay-content" 
+      tabindex="-1"
+      onclick={(e) => e.stopPropagation()}
+    >
       <div class="overlay-header">
-        <h2>Rotor Chain Simulation - Help</h2>
+        <h2 id="help-title">Rotor Chain Simulation - Help</h2>
         <button class="close-btn" onclick={onClose}>×</button>
       </div>
       <div class="overlay-body">
