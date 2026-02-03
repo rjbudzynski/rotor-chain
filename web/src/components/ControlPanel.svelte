@@ -35,8 +35,40 @@
   }>();
 
   const presets = ["Random Angles", "Twisted", "Domain Wall", "Single Kick", "Thermalized"];
+  const MIN_ROTORS = 2;
+  const MAX_ROTORS = 500;
+  
+  // Validation state
+  let nRotorsError = $state("");
+  let kValueError = $state("");
 
   let kLabel = $derived(selectedPreset === "Twisted" ? "Winding (k):" : (selectedPreset === "Single Kick" ? "Velocity (ω):" : ""));
+  
+  function validateAndUpdateNRotors(value: string): boolean {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) {
+      nRotorsError = "Must be a valid number";
+      return false;
+    }
+    if (parsed < MIN_ROTORS || parsed > MAX_ROTORS) {
+      nRotorsError = `Must be between ${MIN_ROTORS} and ${MAX_ROTORS}`;
+      return false;
+    }
+    nRotorsError = "";
+    n_rotors = parsed;
+    return true;
+  }
+  
+  function validateAndUpdateKValue(value: string): boolean {
+    const parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+      kValueError = "Must be a valid number";
+      return false;
+    }
+    kValueError = "";
+    kValue = parsed;
+    return true;
+  }
 </script>
 
 <div class="control-panel">
@@ -46,11 +78,19 @@
       <input 
         type="number" 
         value={n_rotors} 
-        min="2" 
-        max="500" 
+        min={MIN_ROTORS}
+        max={MAX_ROTORS}
         disabled={running} 
-        onchange={(e) => { n_rotors = parseInt(e.currentTarget.value); onReinit(); }} 
+        class:invalid={nRotorsError}
+        onchange={(e) => { 
+          if (validateAndUpdateNRotors(e.currentTarget.value)) {
+            onReinit(); 
+          }
+        }} 
       />
+      {#if nRotorsError}
+        <span class="error">{nRotorsError}</span>
+      {/if}
     </label>
   </div>
 
@@ -69,7 +109,21 @@
     <div class="group">
       <label>
         {kLabel}
-        <input type="number" bind:value={kValue} step={selectedPreset === "Twisted" ? 1 : 0.1} disabled={running} onchange={onReinit} />
+        <input 
+          type="number" 
+          value={kValue}
+          step={selectedPreset === "Twisted" ? 1 : 0.1} 
+          disabled={running} 
+          class:invalid={kValueError}
+          onchange={(e) => {
+            if (validateAndUpdateKValue(e.currentTarget.value)) {
+              onReinit();
+            }
+          }} 
+        />
+        {#if kValueError}
+          <span class="error">{kValueError}</span>
+        {/if}
       </label>
     </div>
   {/if}
@@ -131,6 +185,17 @@
     flex-direction: column;
     gap: 0.2rem;
     font-size: 0.85rem;
+  }
+  
+  input.invalid {
+    border-color: #f44;
+    background-color: #422;
+  }
+  
+  span.error {
+    color: #f44;
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
   }
   input[type="range"] {
     width: 100%;
